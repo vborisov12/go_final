@@ -10,6 +10,8 @@ import (
 	"github.com/vborisov12/go_final/pkg/server"
 )
 
+// Стандартные значения для порта и файла БД
+// Задаются из TODO_PORT и TODO_DBFILE для кастомных значений
 const (
 	defaultPort   = 7540
 	defaultDBFile = "scheduler.db"
@@ -48,6 +50,7 @@ func main() {
 
 }
 
+// Функции для получения значений из переменных окружения
 func getPort() int {
 	port, exists := os.LookupEnv("TODO_PORT")
 	if !exists {

@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/vborisov12/go_final/pkg/api"
 )
 
 func Start(port int) error {
@@ -16,6 +18,8 @@ func Start(port int) error {
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir(webDir))
 	mux.Handle("/", fileServer)
+
+	api.Init(mux)
 
 	log.Printf("Starting server on port %d", port)
 
