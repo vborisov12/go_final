@@ -47,18 +47,6 @@ func init() {
 	}
 }
 
-// isLeap проверяет, является ли год високосным
-func isLeap(year int) bool {
-	return year%400 == 0 || (year%100 != 0 && year%4 == 0)
-}
-
-// afterNow проверяет, находится ли дата после now
-func afterNow(date, now time.Time) bool {
-	return date.Year() > now.Year() ||
-		(date.Year() == now.Year() && date.Month() > now.Month()) ||
-		(date.Year() == now.Year() && date.Month() == now.Month() && date.Day() > now.Day())
-}
-
 // NewDate возвращает дату исходя из правила repeat
 //
 // Параметры:
@@ -275,13 +263,4 @@ func handleMonthRule(now, date time.Time, rule string) (string, error) {
 	}
 
 	return result.Format("20060102"), nil
-}
-
-// lastDayOfMonth возвращает последний день месяца
-//
-// Параметры:
-//
-//	t time.Time - дата
-func lastDayOfMonth(t time.Time) int {
-	return time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
 }

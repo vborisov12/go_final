@@ -1,13 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"os"
 	"strconv"
 
-	"github.com/vborisov12/go_final/pkg/db"
+	"github.com/vborisov12/go_final/pkg/api"
 	"github.com/vborisov12/go_final/pkg/server"
+	"github.com/vborisov12/go_final/pkg/storage"
 )
 
 // Стандартные значения для порта и файла БД
@@ -17,34 +17,22 @@ const (
 	defaultDBFile = "scheduler.db"
 )
 
-type TaskService struct {
-	store db.TaskStore
-}
-
-func NewTaskService(store db.TaskStore) TaskService {
-	return TaskService{store: store}
-}
-
 func main() {
 	dbFile := getDBFile()
 
-	if err := db.Init(dbFile); err != nil {
-		log.Fatal(err)
-	}
-
-	dataBase, err := sql.Open("sqlite", dbFile)
+	db, err := storage.Init(dbFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer dataBase.Close()
+	defer db.Close()
 
-	// store := db.NewTaskStore(dataBase)
-	// service := NewTaskService(store)
+	taskStorage := storage.NewTaskStorage(db)
+	taskService := api.NewTaskService(taskStorage)
+	taskApi := api.NewApi(taskService)
+	taskServer := server.NewTaskServer(getPort(), taskApi)
 
-	port := getPort()
-
-	if err := server.Start(port); err != nil {
+	if err := taskServer.Start(); err != nil {
 		log.Fatal(err)
 	}
 

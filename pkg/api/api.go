@@ -1,9 +1,49 @@
 package api
 
 import (
+	"log"
 	"net/http"
 )
 
-func Init(mux *http.ServeMux) {
-	mux.HandleFunc("/api/nextdate", NextDateHendler)
+type Api struct {
+	taskService *TaskService
+}
+
+func NewApi(taskService *TaskService) *Api {
+	return &Api{
+		taskService: taskService,
+	}
+}
+
+func (a *Api) taskHendler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		log.Printf("Handled POST request to /api/task")
+		a.taskService.AddTaskHandler(w, r)
+	case http.MethodGet:
+		log.Printf("Handled GET request to /api/task")
+		a.taskService.GetTaskHandler(w, r)
+	case http.MethodPut:
+		log.Printf("Handled PUT request to /api/task")
+		a.taskService.UpdateTaskHendler(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (a *Api) tasksHendler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		log.Printf("Handled GET request to /api/tasks")
+		a.taskService.GetTasksHandler(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (a *Api) InitRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/api/nextdate", a.taskService.NextDateHendler)
+	mux.HandleFunc("/api/task", a.taskHendler)
+	mux.HandleFunc("/api/tasks", a.tasksHendler)
+
 }
