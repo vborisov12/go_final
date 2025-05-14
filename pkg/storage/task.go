@@ -55,6 +55,7 @@ func (s *TaskStore) GetTasks(limit int) ([]*Task, error) {
 	return tasks, nil
 }
 
+// SearchTasks поиск задач
 func (s *TaskStore) SearchTasks(search string, limit int) ([]*Task, error) {
 	var tasks []*Task
 
@@ -92,6 +93,7 @@ func (s *TaskStore) SearchTasks(search string, limit int) ([]*Task, error) {
 	return tasks, nil
 }
 
+// SearchTasksByDate поиск задач
 func (s *TaskStore) SearchTasksByDate(search string, limit int) ([]*Task, error) {
 	var tasks []*Task
 
@@ -129,6 +131,7 @@ func (s *TaskStore) SearchTasksByDate(search string, limit int) ([]*Task, error)
 	return tasks, nil
 }
 
+// GetTaskByID возвращает задачу
 func (s *TaskStore) GetTaskByID(id int) (*Task, error) {
 	var task Task
 
@@ -166,6 +169,25 @@ func (s *TaskStore) UpdateTaskByID(task *Task) error {
 	count, err := res.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("Update task failed: %w", err)
+	}
+
+	if count == 0 {
+		return fmt.Errorf("Task not found")
+	}
+
+	return nil
+}
+
+func (s *TaskStore) DeleteTaskByID(id int) error {
+	query := "DELETE FROM scheduler WHERE id = ?"
+	res, err := s.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("Delete task failed: %w", err)
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("Delete task failed: %w", err)
 	}
 
 	if count == 0 {

@@ -208,7 +208,7 @@ func (s *TaskService) UpdateTaskHendler(w http.ResponseWriter, r *http.Request) 
 	var respError struct {
 		Error string `json:"error"`
 	}
-	var resp struct{}
+	resp := struct{}{}
 
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
@@ -250,5 +250,117 @@ func (s *TaskService) UpdateTaskHendler(w http.ResponseWriter, r *http.Request) 
 
 	log.Printf("Executed UpdateTaskHendler by id: %s", task.ID)
 	writeJSON(w, resp, http.StatusOK)
+
+}
+
+// DeleteTaskHandler обработчик запроса /api/task
+// DELETE запрос с параметром id
+func (s *TaskService) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	var respError struct {
+		Error string `json:"error"`
+	}
+
+	resp := struct{}{}
+
+	if r.URL.Query().Has("id") {
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			log.Print("Missing 'id' parameter")
+			respError.Error = fmt.Sprintf("Missing 'id' parameter")
+			writeJSON(w, respError, http.StatusBadRequest)
+			return
+		}
+
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			respError.Error = err.Error()
+			writeJSON(w, respError, http.StatusBadRequest)
+			return
+		}
+
+		err = s.storage.DeleteTaskByID(id)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			respError.Error = err.Error()
+			writeJSON(w, respError, http.StatusInternalServerError)
+			return
+		}
+		log.Printf("Executed DeleteTaskHandler, search by id: %d", id)
+		writeJSON(w, resp, http.StatusOK)
+		return
+	}
+
+	log.Print("Missing 'id' parameter")
+	respError.Error = fmt.Sprintf("Missing 'id' parameter")
+	writeJSON(w, respError, http.StatusBadRequest)
+}
+
+func (s *TaskService) DoneTaskHandler(w http.ResponseWriter, r *http.Request) {
+	var respError struct {
+		Error string `json:"error"`
+	}
+	resp := struct{}{}
+
+	if r.URL.Query().Has("id") {
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			log.Print("Missing 'id' parameter")
+			respError.Error = fmt.Sprintf("Missing 'id' parameter")
+			writeJSON(w, respError, http.StatusBadRequest)
+			return
+		}
+
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			respError.Error = err.Error()
+			writeJSON(w, respError, http.StatusBadRequest)
+			return
+		}
+
+		task, err := s.storage.GetTaskByID(id)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			respError.Error = err.Error()
+			writeJSON(w, respError, http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("Mark task with id: %d as done", id)
+		if task.Repeat == "" {
+			log.Printf("Task with id: %d is not repeatable, delete it", id)
+			err = s.storage.DeleteTaskByID(id)
+			if err != nil {
+				log.Printf("Error: %v", err)
+				respError.Error = err.Error()
+				writeJSON(w, respError, http.StatusInternalServerError)
+				return
+			}
+			writeJSON(w, resp, http.StatusOK)
+			return
+		}
+
+		nextDate, err := NewDate(time.Now(), task.Date, task.Repeat)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			respError.Error = err.Error()
+			writeJSON(w, respError, http.StatusInternalServerError)
+			return
+		}
+		log.Printf("Next exec date %s for task with id: %d", nextDate, id)
+
+		task.Date = nextDate
+		err = s.storage.UpdateTaskByID(task)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			respError.Error = err.Error()
+			writeJSON(w, respError, http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, resp, http.StatusOK)
+		return
+	}
 
 }

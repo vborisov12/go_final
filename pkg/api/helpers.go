@@ -16,7 +16,7 @@ func isLeap(year int) bool {
 func afterNow(date, now time.Time) bool {
 	return date.Year() > now.Year() ||
 		(date.Year() == now.Year() && date.Month() > now.Month()) ||
-		(date.Year() == now.Year() && date.Month() == now.Month() && date.Day() >= now.Day())
+		(date.Year() == now.Year() && date.Month() == now.Month() && date.Day() > now.Day())
 }
 
 // lastDayOfMonth возвращает последний день месяца
@@ -42,10 +42,9 @@ func checkDate(task *storage.Task) error {
 		return fmt.Errorf("Invalid date format: %w", err)
 	}
 
-	// if t.Format("20060102") == now.Format("20060102") {
-	// 	task.Date = t.Format("20060102")
-	// 	return nil
-	// }
+	if t.Format("20060102") == now.Format("20060102") {
+		return nil
+	}
 
 	if task.Repeat != "" {
 		next, err := NewDate(now, task.Date, task.Repeat)
