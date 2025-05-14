@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/joho/godotenv"
 	"github.com/vborisov12/go_final/pkg/api"
 	"github.com/vborisov12/go_final/pkg/server"
 	"github.com/vborisov12/go_final/pkg/storage"
@@ -18,6 +19,8 @@ const (
 )
 
 func main() {
+	loadEnv()
+
 	dbFile := getDBFile()
 
 	db, err := storage.Init(dbFile)
@@ -36,6 +39,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+}
+
+func loadEnv() {
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
 }
 
 // Функции для получения значений из переменных окружения
